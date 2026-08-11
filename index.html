@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Parametric Gear Generator</title>
+<meta name="description" content="Design involute spur gears in the browser and export a print-ready STL." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Quicksand:wght@600;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">3D Printing / CAD Utility</p>
+  <h1>Parametric Gear Generator</h1>
+  <p>Design an involute spur gear, watch it update live in 3D, and export a print-ready STL</p>
+</header>
+
+<div class="app">
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-head">
+        <p class="section-label">Tooth Profile</p>
+        <button id="infoBtn" class="info-btn" type="button" aria-label="Explain gear terminology" title="Explain gear terminology">i</button>
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="teethRange">Teeth (N)</label>
+          <input type="number" class="field-number" data-field="teeth" min="6" max="120" step="1" value="24" />
+        </div>
+        <input id="teethRange" type="range" data-field="teeth" min="6" max="120" step="1" value="24" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="moduleRange">Module (mm)</label>
+          <input type="number" class="field-number" data-field="module" min="0.2" max="10" step="0.1" value="2" />
+        </div>
+        <input id="moduleRange" type="range" data-field="module" min="0.2" max="10" step="0.1" value="2" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="pressureRange">Pressure Angle (&deg;)</label>
+          <input type="number" class="field-number" data-field="pressureAngle" min="14" max="25" step="0.5" value="20" />
+        </div>
+        <input id="pressureRange" type="range" data-field="pressureAngle" min="14" max="25" step="0.5" value="20" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="backlashRange">Backlash (mm)</label>
+          <input type="number" class="field-number" data-field="backlash" min="0" max="0.5" step="0.01" value="0.1" />
+        </div>
+        <input id="backlashRange" type="range" data-field="backlash" min="0" max="0.5" step="0.01" value="0.1" />
+      </div>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="filletRange">Root Fillet (mm)</label>
+          <input type="number" class="field-number" data-field="filletRadius" min="0" max="1" step="0.02" value="0.3" />
+        </div>
+        <input id="filletRange" type="range" data-field="filletRadius" min="0" max="1" step="0.02" value="0.3" />
+      </div>
+      <p class="hint">Backlash and a root fillet both help printed gears run smoother and resist tooth breakage.</p>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Gear Body</p>
+
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="thicknessRange">Thickness (mm)</label>
+          <input type="number" class="field-number" data-field="thickness" min="1" max="60" step="0.5" value="6" />
+        </div>
+        <input id="thicknessRange" type="range" data-field="thickness" min="1" max="60" step="0.5" value="6" />
+      </div>
+
+      <div class="field">
+        <label id="boreTypeLabel">Bore Type</label>
+        <div class="shape-picker" id="boreTypePicker" role="group" aria-labelledby="boreTypeLabel">
+          <button type="button" class="shape-btn" data-shape="none" aria-label="None" title="None">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8" /><line x1="6.3" y1="17.7" x2="17.7" y2="6.3" /></svg>
+          </button>
+          <button type="button" class="shape-btn" data-shape="circle" aria-label="Circle" title="Circle">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8" /></svg>
+          </button>
+          <button type="button" class="shape-btn" data-shape="square" aria-label="Square" title="Square">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="14" height="14" /></svg>
+          </button>
+          <button type="button" class="shape-btn" data-shape="hex" aria-label="Hex" title="Hex">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><polygon points="12,4 19,8 19,16 12,20 5,16 5,8" /></svg>
+          </button>
+        </div>
+      </div>
+      <div class="slider-field">
+        <div class="slider-head">
+          <label for="boreRange">Bore &Oslash; (mm)</label>
+          <input type="number" class="field-number" data-field="boreDiameter" min="0" max="60" step="0.5" value="5" />
+        </div>
+        <input id="boreRange" type="range" data-field="boreDiameter" min="0" max="60" step="0.5" value="5" />
+      </div>
+      <p class="hint">For square/hex, bore &Oslash; is measured corner-to-corner (circumscribed).</p>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Presets</p>
+      <div class="preset-grid" id="presetGrid"></div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Export</p>
+      <button id="exportBtn" class="btn-primary">Download STL</button>
+    </div>
+
+  </div>
+
+  <div class="viewport-col">
+    <div class="hud-bar">
+      <div class="hud-stat">
+        <div class="hud-val" id="hudPitch">48.00 mm</div>
+        <div class="hud-label">Pitch &Oslash;</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-val" id="hudOuter">52.00 mm</div>
+        <div class="hud-label">Outer &Oslash;</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-val" id="hudRoot">43.00 mm</div>
+        <div class="hud-label">Root &Oslash;</div>
+      </div>
+      <div class="hud-stat">
+        <div class="hud-val" id="hudCircPitch">6.28 mm</div>
+        <div class="hud-label">Circular Pitch</div>
+      </div>
+      <label class="toggle-row hud-toggle">
+        <input id="pitchCircleToggle" type="checkbox" />
+        Show pitch circle overlay
+      </label>
+    </div>
+
+    <div class="reticle-wrap">
+      <div class="reticle-corner-tr"></div>
+      <div class="reticle-corner-bl"></div>
+      <canvas id="viewport"></canvas>
+    </div>
+
+    <p class="viewport-caption" id="viewportCaption"></p>
+  </div>
+</div>
+
+<footer>
+  parametric-gear-generator · runs entirely client-side, nothing leaves your browser
+</footer>
+
+<dialog id="infoDialog" class="info-dialog">
+  <div class="info-dialog-head">
+    <p class="section-label">Gear Terminology</p>
+    <button id="infoCloseBtn" class="btn info-close-btn" type="button" aria-label="Close">&times;</button>
+  </div>
+
+  <svg class="schematic" viewBox="0 0 620 380" role="img" aria-label="Diagram of gear tooth terminology">
+    <circle cx="200" cy="215" r="150" fill="none" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="2 4" />
+    <circle cx="200" cy="215" r="118" fill="none" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="1 3" />
+    <circle cx="200" cy="215" r="131" fill="none" stroke="#1153ee" stroke-width="1.2" stroke-dasharray="6 4" />
+    <circle cx="200" cy="215" r="105" fill="none" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="4 3" />
+    <circle cx="200" cy="215" r="2.5" fill="#707070" />
+
+    <polygon points="185,110 190,65 210,65 215,110" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1.2" />
+    <polygon points="256,125 288.8,93.7 304.2,106.5 279,144.2" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1.2" />
+
+    <line x1="200" y1="215" x2="200" y2="84" stroke="#707070" stroke-width="1" stroke-dasharray="3 3" />
+    <line x1="186.3" y1="121.6" x2="213.7" y2="46.4" stroke="#ee1133" stroke-width="1.4" />
+    <path d="M 200 102 A 18 18 0 0 1 211.5 105.5" fill="none" stroke="#ee1133" stroke-width="1" />
+
+    <text x="262" y="24" class="dim-label" fill="#ee1133">&alpha; &mdash; Pressure angle</text>
+    <line x1="256" y1="26" x2="220" y2="32" stroke="#ee1133" stroke-width="1" />
+
+    <line x1="430" y1="87" x2="460" y2="87" stroke="#1153ee" stroke-width="1.2" stroke-dasharray="6 4" />
+    <text x="466" y="90" class="dim-label" fill="#707070">Pitch &Oslash;</text>
+    <line x1="430" y1="111" x2="460" y2="111" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="1 3" />
+    <text x="466" y="114" class="dim-label" fill="#707070">Base &Oslash;</text>
+    <line x1="430" y1="135" x2="460" y2="135" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="4 3" />
+    <text x="466" y="138" class="dim-label" fill="#707070">Root &Oslash;</text>
+    <line x1="430" y1="159" x2="460" y2="159" stroke="#c7c9cc" stroke-width="1" stroke-dasharray="2 4" />
+    <text x="466" y="162" class="dim-label" fill="#707070">Outer &Oslash;</text>
+
+    <text x="430" y="230" class="dim-label" fill="#111" font-size="15">m = d &divide; N</text>
+    <text x="430" y="250" class="dim-label" fill="#707070">Module = Pitch &Oslash; &divide; Teeth</text>
+  </svg>
+
+  <dl class="term-list">
+    <div><dt>Module (m)</dt><dd>Tooth size in mm. Module (m) = Pitch Diameter (d) / Number of Teeth (N). Two gears must share the same module to mesh.</dd></div>
+    <div><dt>Pitch circle</dt><dd>The imaginary rolling circle the tooth size is defined against &mdash; not a physical edge on the gear.</dd></div>
+    <div><dt>Pressure angle (&alpha;)</dt><dd>The angle of the tooth flank at the pitch circle. 20&deg; is standard; it sets how "pointed" vs "stubby" the teeth are.</dd></div>
+    <div><dt>Backlash</dt><dd>A small amount shaved off each tooth's thickness so two mating gears turn freely instead of binding.</dd></div>
+  </dl>
+</dialog>
+
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
