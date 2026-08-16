@@ -7,7 +7,7 @@ export function createViewer(canvas) {
   scene.background = new THREE.Color(0x18191c);
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 5000);
-  camera.position.set(70, 55, 90);
+  camera.position.set(0, -30, 75);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
