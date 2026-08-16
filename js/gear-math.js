@@ -10,7 +10,7 @@ function polar(r, a) {
   return { x: r * Math.cos(a), y: r * Math.sin(a) };
 }
 
-function ccwTangent(angle) {
+export function ccwTangent(angle) {
   return { x: -Math.sin(angle), y: Math.cos(angle) };
 }
 
@@ -18,7 +18,7 @@ function ccwTangent(angle) {
 // from `corner` along the incoming/outgoing edges) meet, with the given
 // fillet radius. Returns the arc points (tangent-to-tangent), replacing
 // the sharp corner.
-function filletArc(corner, dirIn, dirOut, radius, segments) {
+export function filletArc(corner, dirIn, dirOut, radius, segments) {
   const dot = Math.max(-1, Math.min(1, dirIn.x * dirOut.x + dirIn.y * dirOut.y));
   const theta = Math.acos(dot);
   if (theta < 1e-3 || theta > Math.PI - 1e-3 || radius <= 0) {

@@ -12,12 +12,15 @@ const DEFAULTS = {
   boreType: 'circle',
   backlash: 0.1,
   filletRadius: 0.3,
+  wheelStyle: 'spokes',
+  spokeCount: 6,
   clearance: 0.25,
   addendumFactor: 1,
 };
 
-const FIELD_IDS = ['teeth', 'module', 'pressureAngle', 'thickness', 'boreDiameter', 'backlash', 'filletRadius'];
+const FIELD_IDS = ['teeth', 'module', 'pressureAngle', 'thickness', 'boreDiameter', 'backlash', 'filletRadius', 'spokeCount'];
 const BORE_TYPES = ['none', 'circle', 'square', 'hex'];
+const WHEEL_STYLES = ['solid', 'spokes'];
 
 const params = { ...DEFAULTS, ...readParamsFromURL() };
 let showPitchCircle = false;
@@ -42,6 +45,9 @@ function readParamsFromURL() {
   if (url.has('boreType') && BORE_TYPES.includes(url.get('boreType'))) {
     out.boreType = url.get('boreType');
   }
+  if (url.has('wheelStyle') && WHEEL_STYLES.includes(url.get('wheelStyle'))) {
+    out.wheelStyle = url.get('wheelStyle');
+  }
   return out;
 }
 
@@ -49,10 +55,12 @@ function syncURL() {
   const url = new URLSearchParams();
   for (const id of FIELD_IDS) url.set(id, params[id]);
   url.set('boreType', params.boreType);
+  url.set('wheelStyle', params.wheelStyle);
   history.replaceState(null, '', `?${url.toString()}`);
 }
 
-const shapeButtons = document.querySelectorAll('.shape-btn');
+const boreButtons = document.querySelectorAll('#boreTypePicker .shape-btn');
+const wheelButtons = document.querySelectorAll('#wheelStylePicker .shape-btn');
 
 function syncInputs() {
   for (const id of FIELD_IDS) {
@@ -60,16 +68,26 @@ function syncInputs() {
       el.value = params[id];
     });
   }
-  shapeButtons.forEach((btn) => {
+  boreButtons.forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.shape === params.boreType);
+  });
+  wheelButtons.forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.wheel === params.wheelStyle);
   });
   document.getElementById('pitchCircleToggle').checked = showPitchCircle;
   updateBoreControlsState();
+  updateSpokeControlsState();
 }
 
 function updateBoreControlsState() {
   inputs.boreDiameter.forEach((el) => {
     el.disabled = params.boreType === 'none';
+  });
+}
+
+function updateSpokeControlsState() {
+  inputs.spokeCount.forEach((el) => {
+    el.disabled = params.wheelStyle !== 'spokes';
   });
 }
 
@@ -86,11 +104,12 @@ function updateHUD(stats) {
 
 function updateCaption(stats) {
   const caption = document.getElementById('viewportCaption');
+  const web = params.wheelStyle === 'spokes' ? `, ${params.spokeCount}-spoke web` : '';
   caption.innerHTML =
     `<b>${params.teeth}-tooth</b> spur gear at module <b>${params.module} mm</b> ` +
     `(${(25.4 / params.module).toFixed(2)} DP), ${params.pressureAngle}&deg; pressure angle. ` +
-    `Outer diameter <b>${stats.outerDiameter.toFixed(1)} mm</b>, ` +
-    `bore <b>${params.boreDiameter} mm</b>, thickness <b>${params.thickness} mm</b>.`;
+    `Pitch diameter <b>${stats.pitchDiameter.toFixed(1)} mm</b>, ` +
+    `bore <b>${params.boreDiameter} mm</b>, thickness <b>${params.thickness} mm</b>${web}.`;
 }
 
 function regenerate() {
@@ -123,11 +142,20 @@ document.getElementById('pitchCircleToggle').addEventListener('change', (e) => {
   regenerate();
 });
 
-shapeButtons.forEach((btn) => {
+boreButtons.forEach((btn) => {
   btn.addEventListener('click', () => {
     params.boreType = btn.dataset.shape;
-    shapeButtons.forEach((other) => other.classList.toggle('active', other === btn));
+    boreButtons.forEach((other) => other.classList.toggle('active', other === btn));
     updateBoreControlsState();
+    regenerate();
+  });
+});
+
+wheelButtons.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    params.wheelStyle = btn.dataset.wheel;
+    wheelButtons.forEach((other) => other.classList.toggle('active', other === btn));
+    updateSpokeControlsState();
     regenerate();
   });
 });
